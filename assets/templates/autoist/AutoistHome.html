@@ -1,0 +1,205 @@
+{% extends 'autoist/autoistbase.html' %} {% load static %} {% block contents %}
+
+<style>
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+    margin-bottom: 40px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 18px;
+    padding: 25px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    transition: 0.3s;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+  }
+
+  .card h2 {
+    font-size: 18px;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+
+  .card h1 {
+    font-size: 38px;
+    font-family: "Syne", sans-serif;
+    color: #1e3a8a;
+  }
+
+  .hero {
+    margin-top: 20px;
+    background: white;
+    border-radius: 20px;
+    padding: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+  }
+
+  .hero-text h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    font-family: "Syne", sans-serif;
+  }
+
+  .hero-text p {
+    font-size: 20px;
+    color: #64748b;
+    margin-bottom: 30px;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 15px 34px;
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+
+  .btn:hover {
+    background: #1d4ed8;
+  }
+
+  .hero img {
+    width: 500px;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+    margin-top: 35px;
+  }
+
+  .action-card {
+    background: white;
+    padding: 35px;
+    text-align: center;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    transition: 0.3s;
+  }
+
+  .action-card:hover {
+    transform: translateY(-8px);
+  }
+
+  .action-card h3 {
+    margin-top: 20px;
+  }
+
+  .action-card a {
+    text-decoration: none;
+
+    color: #2563eb;
+
+    font-weight: bold;
+  }
+
+  @media (max-width: 1100px) {
+    .dashboard,
+    .actions {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hero {
+      flex-direction: column;
+
+      text-align: center;
+    }
+
+    .hero img {
+      margin-top: 40px;
+
+      width: 100%;
+      max-width: 420px;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .dashboard,
+    .actions {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="dashboard">
+  <div class="card">
+    <h2>Driver</h2>
+    <h1>{{request.session.loggeduser}}</h1>
+  </div>
+
+  <div class="card">
+    <h2>Vehicle</h2>
+    <h1>{{request.session.vehiclenumber}}</h1>
+  </div>
+
+  <div class="card">
+    <h2>Status</h2>
+    <h1 style="color: green">Active</h1>
+  </div>
+
+  <div class="card">
+    <h2>Detection</h2>
+    <h1>Ready</h1>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="hero-text">
+    <h1>Driver Dashboard</h1>
+
+    <p>Monitor fatigue detection in real time and ensure safe driving.</p>
+
+    <a href="{% url 'StartDetection' %}" class="btn"> Start Detection </a>
+  </div>
+
+  <img src="{% static 'images/slider_1.png' %}" />
+</section>
+
+<div class="actions">
+  <div class="action-card">
+    <h2>🚗</h2>
+
+    <h3>Start Detection</h3>
+
+    <a href="{% url 'StartDetection' %}"> Open </a>
+  </div>
+
+  <div class="action-card">
+    <h2>📊</h2>
+
+    <h3>Training</h3>
+
+    <a href="{% url 'StartTraining' %}"> Open </a>
+  </div>
+
+  <div class="action-card">
+    <h2>📜</h2>
+
+    <h3>History</h3>
+
+    <a href="{% url 'Autoisthistory' %}"> Open </a>
+  </div>
+
+  <div class="action-card">
+    <h2>🚪</h2>
+
+    <h3>Logout</h3>
+
+    <a href="{% url 'logout' %}"> Logout </a>
+  </div>
+</div>
+
+{% endblock %}

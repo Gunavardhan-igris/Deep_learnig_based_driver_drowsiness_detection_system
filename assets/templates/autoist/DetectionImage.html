@@ -1,0 +1,189 @@
+{% extends 'autoist/autoistbase.html' %} {% load static %} {% block contents %}
+
+<style>
+  .page-title {
+    font-size: 38px;
+    font-family: "Syne", sans-serif;
+    margin-bottom: 25px;
+    color: #1f2937;
+  }
+
+  .dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+
+  .info-card {
+    background: white;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .info-card h2 {
+    margin-bottom: 20px;
+    font-family: "Syne", sans-serif;
+    color: #1e3a8a;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  td {
+    padding: 14px;
+    border-bottom: 1px solid #eee;
+  }
+
+  td:first-child {
+    font-weight: bold;
+    width: 45%;
+    color: #374151;
+  }
+
+  .status {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    color: white;
+  }
+
+  .safe {
+    background: #16a34a;
+  }
+
+  .danger {
+    background: #dc2626;
+  }
+
+  .image-card {
+    background: white;
+    border-radius: 18px;
+    padding: 25px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    text-align: center;
+  }
+
+  .image-card img {
+    width: 100%;
+    max-width: 550px;
+    border-radius: 15px;
+  }
+
+  .buttons {
+    margin-top: 30px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .btn {
+    padding: 14px 28px;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    color: white;
+  }
+
+  .blue {
+    background: #2563eb;
+  }
+
+  .green {
+    background: #16a34a;
+  }
+
+  @media (max-width: 950px) {
+    .dashboard {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<h1 class="page-title">Driver Fatigue Detection Report</h1>
+
+<div class="dashboard">
+  <div class="info-card">
+    <h2>Detection Details</h2>
+
+    <table>
+      <tr>
+        <td>Driver</td>
+        <td>{{user_name}}</td>
+      </tr>
+
+      <tr>
+        <td>Login ID</td>
+        <td>{{login_user}}</td>
+      </tr>
+
+      <tr>
+        <td>Email</td>
+        <td>{{email}}</td>
+      </tr>
+
+      <tr>
+        <td>Vehicle Number</td>
+        <td>{{vehiclenumber}}</td>
+      </tr>
+
+      <tr>
+        <td>Latitude</td>
+        <td>{{lattitude}}</td>
+      </tr>
+
+      <tr>
+        <td>Longitude</td>
+        <td>{{longitude}}</td>
+      </tr>
+
+      <tr>
+        <td>Date</td>
+        <td>{{c_date}}</td>
+      </tr>
+
+      <tr>
+        <td>Status</td>
+
+        <td>
+          {% if fatigue == "Fatigue" %}
+
+          <span class="status danger"> Fatigue Detected </span>
+
+          {% else %}
+
+          <span class="status safe"> Safe Driving </span>
+
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+
+    <div class="buttons">
+      <a href="{% url 'DetectFatigueDriver' %}" class="btn blue">
+        Detect Again
+      </a>
+
+      <a href="{% url 'Autoisthistory' %}" class="btn green"> View History </a>
+    </div>
+  </div>
+
+  <div class="image-card">
+    <h2
+      style="
+        margin-bottom: 20px;
+        font-family: &quot;Syne&quot;, sans-serif;
+        color: #1e3a8a;
+      "
+    >
+      AI Monitoring
+    </h2>
+
+    <img src="{% static 'drowsy_image.jpg' %}" alt="Driver Detection" />
+  </div>
+</div>
+
+{% endblock %}

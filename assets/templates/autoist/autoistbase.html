@@ -1,0 +1,141 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <title>Driver Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: #eef3fb;
+      }
+
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+
+        height: 78px;
+
+        background: #0f1d40;
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        padding: 0 70px;
+
+        z-index: 999;
+
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      }
+
+      .logo {
+        font-size: 20px;
+        font-weight: 800;
+
+        font-family: "Syne", sans-serif;
+
+        color: white;
+
+        text-decoration: none;
+      }
+
+      .menu {
+        display: flex;
+
+        gap: 18px;
+
+        align-items: center;
+      }
+
+      .menu a {
+        text-decoration: none;
+
+        color: white;
+
+        font-weight: 600;
+
+        padding: 12px 18px;
+
+        border-radius: 10px;
+
+        transition: 0.3s;
+      }
+
+      .menu a:hover {
+        background: #334155;
+      }
+
+      .logout {
+        color: #ff6b6b !important;
+      }
+
+      main {
+        padding-top: 100px;
+
+        width: 92%;
+
+        margin: auto;
+      }
+
+      @media (max-width: 900px) {
+        nav {
+          padding: 20px;
+
+          flex-direction: column;
+
+          height: auto;
+        }
+
+        .menu {
+          flex-wrap: wrap;
+
+          justify-content: center;
+
+          margin-top: 15px;
+        }
+
+        main {
+          padding-top: 170px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav>
+      <a href="{% url 'AutoistHome' %}" class="logo"> Drowsiness Monitoring </a>
+
+      <div class="menu">
+        <a href="{% url 'AutoistHome' %}">Home</a>
+
+        <a href="{% url 'DetectFatigueDriver' %}">Detect Drowsiness</a>
+
+        <a href="{% url 'StartTraining' %}">Training</a>
+
+        <a href="{% url 'Autoisthistory' %}">History</a>
+
+        <a href="{% url 'logout' %}" class="logout">Logout</a>
+      </div>
+    </nav>
+
+    <main>{% block contents %} {% endblock %}</main>
+  </body>
+</html>
