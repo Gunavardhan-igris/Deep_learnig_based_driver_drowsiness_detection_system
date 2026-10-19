@@ -1,6 +1,7 @@
 BASEPAPER/
 DOCUMENTS/
 ABSTRACT/
+
 __pycache__/
 *.pyc
 *.pyo
@@ -16,3 +17,4 @@ build/
 env/
 venv/
 .DS_Store
+staticfiles/

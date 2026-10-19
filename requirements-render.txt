@@ -1,0 +1,10 @@
+Django==5.2
+gunicorn
+whitenoise==6.12.0
+numpy==1.26.0
+h5py==3.13.0
+keras==2.15.0
+tensorflow==2.15.0
+opencv-python-headless==4.10.0.84
+Pillow==11.2.1
+geocoder
