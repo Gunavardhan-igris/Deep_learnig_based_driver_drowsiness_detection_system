@@ -1,79 +1,84 @@
-{% extends 'base.html' %}
-{% load static %}
-{% block contents %}
+{% extends 'base.html' %} {% load static %} {% block contents %}
 
 <style>
-.owner-page {
+  .owner-page {
     min-height: calc(100vh - 72px);
     background: linear-gradient(135deg, #f0f4f8 0%, #ede8f5 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40px 1.5rem;
-}
+  }
 
-.owner-card {
+  .owner-card {
     width: 100%;
     max-width: 420px;
     background: #fff;
     border-radius: 20px;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.12);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
     overflow: hidden;
-}
+  }
 
-/* Header */
-.owner-header {
+  /* Header */
+  .owner-header {
     background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 100%);
     padding: 36px 36px 32px;
     text-align: center;
     position: relative;
     overflow: hidden;
-}
+  }
 
-.owner-header::after {
-    content: '';
+  .owner-header::after {
+    content: "";
     position: absolute;
-    right: -40px; top: -40px;
-    width: 180px; height: 180px;
-    background: rgba(255,255,255,0.04);
+    right: -40px;
+    top: -40px;
+    width: 180px;
+    height: 180px;
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 50%;
-}
+  }
 
-.owner-icon {
-    width: 60px; height: 60px;
-    background: rgba(255,255,255,0.1);
+  .owner-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.6rem;
     margin: 0 auto 16px;
-    border: 2px solid rgba(255,255,255,0.18);
+    border: 2px solid rgba(255, 255, 255, 0.18);
     position: relative;
-}
+  }
 
-.owner-header h3 {
-    font-family: 'Syne', sans-serif;
+  .owner-header h3 {
+    font-family: "Syne", sans-serif;
     font-size: 1.7rem;
     font-weight: 800;
     color: #fff;
     margin: 0 0 6px;
     letter-spacing: -0.4px;
     position: relative;
-}
+  }
 
-.owner-header p {
-    color: rgba(255,255,255,0.55);
+  .owner-header p {
+    color: rgba(255, 255, 255, 0.55);
     font-size: 0.9rem;
     position: relative;
-}
+  }
 
-/* Body */
-.owner-body {
+  /* Body */
+  .owner-body {
     padding: 32px 36px;
-}
+  }
 
-.form-group { margin-bottom: 20px; }
+  .form-group {
+    margin-bottom: 20px;
+  }
 
-.form-group label {
+  .form-group label {
     display: block;
     font-size: 0.78rem;
     font-weight: 700;
@@ -81,43 +86,49 @@
     margin-bottom: 8px;
     letter-spacing: 0.4px;
     text-transform: uppercase;
-}
+  }
 
-.form-input {
+  .form-input {
     width: 100%;
     padding: 13px 16px;
     border: 1.5px solid #e2e8f0;
     border-radius: 10px;
     font-size: 0.95rem;
-    font-family: 'DM Sans', sans-serif;
+    font-family: "DM Sans", sans-serif;
     color: #0f172a;
     background: #f8fafc;
     outline: none;
     transition: all 0.25s;
-}
+  }
 
-.form-input:focus {
+  .form-input:focus {
     border-color: #4f46e5;
     background: #fff;
-    box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
-}
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
 
-.form-input::placeholder { color: #94a3b8; }
+  .form-input::placeholder {
+    color: #94a3b8;
+  }
 
-/* Alert */
-.alert-msg {
+  /* Alert */
+  .alert-msg {
     padding: 12px 16px;
     border-radius: 10px;
     font-size: 0.88rem;
     margin-top: 14px;
     font-weight: 500;
     text-align: center;
-}
+  }
 
-.alert-msg.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+  .alert-msg.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
 
-/* Button */
-.owner-btn {
+  /* Button */
+  .owner-btn {
     width: 100%;
     margin-top: 4px;
     padding: 14px;
@@ -126,79 +137,105 @@
     color: #fff;
     font-size: 1rem;
     font-weight: 700;
-    font-family: 'Syne', sans-serif;
+    font-family: "Syne", sans-serif;
     border-radius: 10px;
     cursor: pointer;
     letter-spacing: 0.2px;
     transition: all 0.3s;
-    box-shadow: 0 6px 20px rgba(79,70,229,0.3);
-}
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+  }
 
-.owner-btn:hover {
+  .owner-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 10px 28px rgba(79,70,229,0.42);
-}
+    box-shadow: 0 10px 28px rgba(79, 70, 229, 0.42);
+  }
 
-/* Footer */
-.owner-footer {
+  /* Footer */
+  .owner-footer {
     background: #f8fafc;
     border-top: 1px solid #e2e8f0;
     text-align: center;
     font-size: 0.8rem;
     padding: 13px;
     color: #94a3b8;
-}
+  }
 
-@media (max-width: 480px) {
-    .owner-body { padding: 24px 20px; }
-    .owner-header { padding: 28px 20px 24px; }
-}
+  @media (max-width: 480px) {
+    .owner-page {
+      padding: 24px 12px;
+    }
+
+    .owner-body {
+      padding: 24px 20px;
+    }
+
+    .owner-header {
+      padding: 28px 20px 24px;
+    }
+
+    .owner-header h3 {
+      font-size: 1.4rem;
+    }
+
+    .form-input {
+      padding: 12px 14px;
+      font-size: 0.9rem;
+    }
+
+    .owner-btn {
+      padding: 12px;
+      font-size: 0.95rem;
+    }
+  }
 </style>
 
 <div class="owner-page">
-    <div class="owner-card">
-
-        <div class="owner-header">
-            <div class="owner-icon">🏢</div>
-            <h3>Owner Login</h3>
-            <p>Authorized fleet management access</p>
-        </div>
-
-        <div class="owner-body">
-            <form action="{% url 'AdminLoginCheck' %}" method="POST">
-                {% csrf_token %}
-
-                <div class="form-group">
-                    <label>Login ID</label>
-                    <input type="text"
-                           name="loginid"
-                           class="form-input"
-                           placeholder="Enter your login ID"
-                           required autofocus>
-                </div>
-
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password"
-                           name="pswd"
-                           class="form-input"
-                           placeholder="Enter your password"
-                           required>
-                </div>
-
-                <button type="submit" class="owner-btn">Access Dashboard</button>
-
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert-msg error">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            </form>
-        </div>
-
-        <div class="owner-footer">🔐 Authorized Access Only — All activity is logged</div>
-
+  <div class="owner-card">
+    <div class="owner-header">
+      <div class="owner-icon">🏢</div>
+      <h3>Owner Login</h3>
+      <p>Authorized fleet management access</p>
     </div>
+
+    <div class="owner-body">
+      <form action="{% url 'AdminLoginCheck' %}" method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label>Login ID</label>
+          <input
+            type="text"
+            name="loginid"
+            class="form-input"
+            placeholder="Enter your login ID"
+            required
+            autofocus
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input
+            type="password"
+            name="pswd"
+            class="form-input"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+
+        <button type="submit" class="owner-btn">Access Dashboard</button>
+
+        {% if messages %} {% for message in messages %}
+        <div class="alert-msg error">{{ message }}</div>
+        {% endfor %} {% endif %}
+      </form>
+    </div>
+
+    <div class="owner-footer">
+      🔐 Authorized Access Only — All activity is logged
+    </div>
+  </div>
 </div>
 
 {% endblock %}

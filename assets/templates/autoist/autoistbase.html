@@ -30,53 +30,41 @@
         top: 0;
         left: 0;
         right: 0;
-
-        height: 78px;
-
+        min-height: 78px;
         background: #0f1d40;
-
         display: flex;
         justify-content: space-between;
         align-items: center;
-
-        padding: 0 70px;
-
+        padding: 18px 70px;
         z-index: 999;
-
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
       }
 
       .logo {
         font-size: 20px;
         font-weight: 800;
-
         font-family: "Syne", sans-serif;
-
         color: white;
-
         text-decoration: none;
+        white-space: nowrap;
       }
 
       .menu {
         display: flex;
-
         gap: 18px;
-
         align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
       }
 
       .menu a {
         text-decoration: none;
-
         color: white;
-
         font-weight: 600;
-
-        padding: 12px 18px;
-
+        padding: 10px 14px;
         border-radius: 10px;
-
         transition: 0.3s;
+        white-space: nowrap;
       }
 
       .menu a:hover {
@@ -89,31 +77,47 @@
 
       main {
         padding-top: 100px;
-
-        width: 92%;
-
-        margin: auto;
+        width: min(92%, 1280px);
+        margin: 0 auto;
       }
 
       @media (max-width: 900px) {
         nav {
-          padding: 20px;
-
+          padding: 16px 20px;
           flex-direction: column;
-
-          height: auto;
+          align-items: flex-start;
+          gap: 12px;
         }
 
         .menu {
-          flex-wrap: wrap;
-
+          width: 100%;
           justify-content: center;
+          gap: 8px;
+        }
 
-          margin-top: 15px;
+        .menu a {
+          font-size: 0.8rem;
+          padding: 8px 10px;
         }
 
         main {
-          padding-top: 170px;
+          padding-top: 150px;
+          width: min(94%, 1280px);
+        }
+      }
+
+      @media (max-width: 560px) {
+        .logo {
+          font-size: 16px;
+        }
+
+        .menu {
+          gap: 6px;
+        }
+
+        .menu a {
+          width: calc(50% - 6px);
+          text-align: center;
         }
       }
     </style>

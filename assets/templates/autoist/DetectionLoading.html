@@ -1,0 +1,356 @@
+{% extends 'autoist/autoistbase.html' %} {% load static %} {% block contents %}
+<style>
+  body {
+    background: #eef3fb;
+  }
+  .camera-panel {
+    max-width: 980px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+  }
+  .camera-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  h2 {
+    color: #1e3a8a;
+    font-family: "Syne", sans-serif;
+    margin: 0;
+  }
+  .status-pill {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 600;
+  }
+  .status-box {
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-weight: 700;
+    text-align: center;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .safe-box {
+    background: #dcfce7;
+    color: #166534;
+  }
+  .danger-box {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+  video {
+    width: 100%;
+    border-radius: 16px;
+    background: #000;
+    max-height: 560px;
+    object-fit: cover;
+  }
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  button {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-weight: 700;
+    cursor: pointer;
+    color: white;
+    background: #2563eb;
+  }
+  .danger-btn {
+    background: #dc2626;
+  }
+  .score-bar {
+    width: 100%;
+    height: 18px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 8px;
+    border: 1px solid #d1d5db;
+  }
+  .score-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #22c55e, #facc15, #ef4444);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+  .eye-label {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .eye-open {
+    background: #dcfce7;
+    color: #166534;
+  }
+  .eye-closed {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+</style>
+
+<div class="camera-panel">
+  <div class="camera-top">
+    <h2>Live Driver Monitoring</h2>
+    <div class="status-pill" id="stateText">Camera ready</div>
+  </div>
+
+  <video id="webcam" autoplay playsinline muted></video>
+  <audio id="alarmSound" src="/media/alarm.wav" preload="auto"></audio>
+
+  <div
+    class="controls"
+    style="
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    "
+  >
+    <div id="safetyStatus" class="status-box safe-box">SAFE</div>
+    <div id="fatigueScoreBox" class="status-box">Fatigue Score: 0%</div>
+  </div>
+
+  <div style="margin-top: 16px">
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        margin-bottom: 6px;
+      "
+    >
+      <span>Fatigue Score</span>
+      <span id="fatiguePercentLabel">0%</span>
+    </div>
+    <div class="score-bar">
+      <div id="fatigueFill" class="score-fill"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="startBtn">Start Webcam</button>
+    <button id="stopBtn" class="danger-btn">Stop</button>
+  </div>
+
+  <div
+    class="controls"
+    style="
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    "
+  >
+    <div
+      class="status-pill"
+      id="drowsinessBox"
+      style="background: #e0f2fe; color: #0f172a; text-align: center"
+    >
+      Drowsiness: 0%
+    </div>
+    <div
+      class="status-pill"
+      id="leftEyeBox"
+      style="background: #ecfeff; color: #0f172a; text-align: center"
+    >
+      Left Eye: Unknown
+    </div>
+    <div
+      class="status-pill"
+      id="rightEyeBox"
+      style="background: #ecfeff; color: #0f172a; text-align: center"
+    >
+      Right Eye: Unknown
+    </div>
+  </div>
+
+  <div style="margin-top: 14px; text-align: center">
+    <span id="eyeStatusLabel" class="eye-label eye-open">Eyes Open</span>
+  </div>
+</div>
+
+<script>
+  const webcam = document.getElementById("webcam");
+  const startBtn = document.getElementById("startBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  const stateText = document.getElementById("stateText");
+  const alarmSound = document.getElementById("alarmSound");
+  const drowsinessBox = document.getElementById("drowsinessBox");
+  const leftEyeBox = document.getElementById("leftEyeBox");
+  const rightEyeBox = document.getElementById("rightEyeBox");
+  const safetyStatus = document.getElementById("safetyStatus");
+  const fatigueScoreBox = document.getElementById("fatigueScoreBox");
+  const fatigueFill = document.getElementById("fatigueFill");
+  const fatiguePercentLabel = document.getElementById("fatiguePercentLabel");
+  const eyeStatusLabel = document.getElementById("eyeStatusLabel");
+  let stream = null;
+  let processingInterval = null;
+  let alarmPlaying = false;
+
+  function setSafetyState(isDanger) {
+    if (isDanger) {
+      safetyStatus.textContent = "DANGER";
+      safetyStatus.className = "status-box danger-box";
+      stateText.textContent = "Drowsiness detected! Alarm triggered";
+      stateText.style.background = "#fee2e2";
+      stateText.style.color = "#991b1b";
+    } else {
+      safetyStatus.textContent = "SAFE";
+      safetyStatus.className = "status-box safe-box";
+      stateText.textContent = "Monitoring...";
+      stateText.style.background = "#dbeafe";
+      stateText.style.color = "#1d4ed8";
+    }
+  }
+
+  function updateEyeStatus(leftEye, rightEye) {
+    const eyel = (leftEye || "").toLowerCase();
+    const eyer = (rightEye || "").toLowerCase();
+
+    if (eyel === "closed" || eyer === "closed") {
+      eyeStatusLabel.textContent = "Eyes Closed";
+      eyeStatusLabel.className = "eye-label eye-closed";
+    } else {
+      eyeStatusLabel.textContent = "Eyes Open";
+      eyeStatusLabel.className = "eye-label eye-open";
+    }
+  }
+
+  function playAlarm() {
+    if (!alarmPlaying) {
+      alarmSound.currentTime = 0;
+      alarmSound.loop = true;
+      alarmSound.play().catch(() => {
+        console.log("Alarm autoplay blocked until user interaction.");
+      });
+      alarmPlaying = true;
+    }
+  }
+
+  function stopAlarm() {
+    alarmSound.pause();
+    alarmSound.currentTime = 0;
+    alarmSound.loop = false;
+    alarmPlaying = false;
+  }
+
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+        audio: false,
+      });
+      webcam.srcObject = stream;
+      stateText.textContent = "Camera active";
+      stateText.style.background = "#dcfce7";
+      stateText.style.color = "#166534";
+      startDetectionLoop();
+    } catch (err) {
+      stateText.textContent = "Camera permission denied";
+      stateText.style.background = "#fee2e2";
+      stateText.style.color = "#991b1b";
+      console.error(err);
+    }
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      stream = null;
+    }
+    if (processingInterval) {
+      clearInterval(processingInterval);
+      processingInterval = null;
+    }
+    webcam.srcObject = null;
+    stopAlarm();
+    drowsinessBox.textContent = "Drowsiness: 0%";
+    leftEyeBox.textContent = "Left Eye: Unknown";
+    rightEyeBox.textContent = "Right Eye: Unknown";
+    safetyStatus.textContent = "SAFE";
+    safetyStatus.className = "status-box safe-box";
+    fatigueScoreBox.textContent = "Fatigue Score: 0%";
+    fatigueFill.style.width = "0%";
+    fatiguePercentLabel.textContent = "0%";
+    eyeStatusLabel.textContent = "Eyes Open";
+    eyeStatusLabel.className = "eye-label eye-open";
+    stateText.textContent = "Camera stopped";
+    stateText.style.background = "#e2e8f0";
+    stateText.style.color = "#334155";
+  }
+
+  function startDetectionLoop() {
+    if (processingInterval) return;
+
+    processingInterval = setInterval(() => {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = webcam.videoWidth || 640;
+      canvas.height = webcam.videoHeight || 480;
+
+      if (webcam.videoWidth && webcam.videoHeight) {
+        context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL("image/jpeg", 0.8);
+
+        fetch('{% url "AnalyzeCameraFrame" %}', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+          body: JSON.stringify({ image_data: imageData }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            const drowsinessValue = Number(data.drowsiness ?? 0);
+            const leftEye = data.left_eye ?? "Unknown";
+            const rightEye = data.right_eye ?? "Unknown";
+
+            drowsinessBox.textContent = `Drowsiness: ${drowsinessValue}%`;
+            leftEyeBox.textContent = `Left Eye: ${leftEye}`;
+            rightEyeBox.textContent = `Right Eye: ${rightEye}`;
+            fatigueScoreBox.textContent = `Fatigue Score: ${drowsinessValue}%`;
+            fatiguePercentLabel.textContent = `${drowsinessValue}%`;
+            fatigueFill.style.width = `${Math.min(drowsinessValue, 100)}%`;
+            updateEyeStatus(leftEye, rightEye);
+
+            if (data.fatigue) {
+              setSafetyState(true);
+              playAlarm();
+            } else {
+              setSafetyState(false);
+              stopAlarm();
+            }
+          })
+          .catch((error) => {
+            console.error("Detection error:", error);
+          });
+      }
+    }, 1500);
+  }
+
+  startBtn.addEventListener("click", startCamera);
+  stopBtn.addEventListener("click", stopCamera);
+  window.addEventListener("load", startCamera);
+</script>
+{% endblock %}

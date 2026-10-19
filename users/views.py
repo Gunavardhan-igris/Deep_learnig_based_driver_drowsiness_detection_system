@@ -1,13 +1,14 @@
-from django.shortcuts import render, HttpResponse, redirect
+from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.http import JsonResponse
 
 from .forms import DriverRegistrationForm
 from .models import DriverRegistrationModel, FattigueInfoModel
-
-from users.utility.detections import FatigueDetections
+from users.utility.detections_remote import FatigueDetectionsRemote
 
 import geocoder
 import datetime
+import json
 
 
 # ---------------- Driver Registration ---------------- #
@@ -67,14 +68,12 @@ def AutoistLoginCheck(request):
 
     return render(request, "AutoistLogin.html")
 
+
 # ---------------- Detection Loading ---------------- #
 
 def StartDetection(request):
+    return render(request, "autoist/DetectionLoading.html")
 
-    return render(
-        request,
-        "autoist/DetectionLoading.html"
-    )
 
 # ---------------- Driver Home ---------------- #
 
@@ -84,11 +83,52 @@ def AutoistHome(request):
 
 # ---------------- Detection ---------------- #
 
+def AnalyzeCameraFrame(request):
+    if request.method != 'POST':
+        return JsonResponse({"fatigue": False, "message": "Only POST is allowed."})
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return JsonResponse({"fatigue": False, "message": "Invalid payload."})
+
+    image_data = payload.get('image_data')
+    if not image_data:
+        return JsonResponse({"fatigue": False, "message": "Image not found."})
+
+    fatigue_result = FatigueDetectionsRemote().predict_from_base64(image_data)
+    fatigue = fatigue_result.get("fatigue", False)
+
+    if fatigue:
+        user_name = request.session.get("loggeduser")
+        login_user = request.session.get("loginid")
+        email = request.session.get("email")
+        vehiclenumber = request.session.get("vehiclenumber")
+
+        g = geocoder.ip("me")
+        location = g.latlng if g.ok else [None, None]
+
+        FattigueInfoModel.objects.create(
+            user_name=user_name,
+            login_user=login_user,
+            email=email,
+            vehiclenumber=vehiclenumber,
+            lattitude=location[0],
+            longitude=location[1],
+            fatigue="Fatigue",
+            c_date=datetime.datetime.now(),
+        )
+
+    return JsonResponse({
+        "fatigue": bool(fatigue),
+        "drowsiness": fatigue_result.get("drowsiness", 0),
+        "left_eye": fatigue_result.get("left_eye", "Unknown"),
+        "right_eye": fatigue_result.get("right_eye", "Unknown"),
+        "status": fatigue_result.get("status", "Eyes monitored")
+    })
+
+
 def DetectFatigueDriver(request):
-
-    obj = FatigueDetections()
-    flag = obj.start_process()
-
     g = geocoder.ip("me")
     location = g.latlng if g.ok else [None, None]
 
@@ -99,11 +139,9 @@ def DetectFatigueDriver(request):
     login_user = request.session.get("loginid")
     email = request.session.get("email")
     vehiclenumber = request.session.get("vehiclenumber")
-
     current_date = datetime.datetime.now()
 
     context = {
-
         "user_name": user_name,
         "login_user": login_user,
         "email": email,
@@ -112,25 +150,7 @@ def DetectFatigueDriver(request):
         "longitude": longitude,
         "fatigue": "No Fatigue",
         "c_date": current_date,
-
     }
-
-    if flag:
-
-        context["fatigue"] = "Fatigue"
-
-        FattigueInfoModel.objects.create(
-
-            user_name=user_name,
-            login_user=login_user,
-            email=email,
-            vehiclenumber=vehiclenumber,
-            lattitude=latitude,
-            longitude=longitude,
-            fatigue="Fatigue",
-            c_date=current_date
-
-        )
 
     return render(request, "autoist/DetectionImage.html", context)
 
@@ -138,9 +158,7 @@ def DetectFatigueDriver(request):
 # ---------------- Training ---------------- #
 
 def StartTraining(request):
-
     from users.utility import model
-
     return render(request, "autoist/TrainingComplete.html")
 
 

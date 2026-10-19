@@ -54,14 +54,26 @@ class FatigueDetectionsRemote:
     def predict_from_base64(self, image_data):
         frame = self._decode_base64_image(image_data)
         if frame is None:
-            return False
+            return {
+                "fatigue": False,
+                "drowsiness": 0,
+                "left_eye": "Unknown",
+                "right_eye": "Unknown",
+                "status": "No valid frame"
+            }
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = FatigueDetectionsRemote.face_cascade.detectMultiScale(
             gray, minNeighbors=5, scaleFactor=1.1, minSize=(25, 25)
         )
         if len(faces) == 0:
-            return False
+            return {
+                "fatigue": False,
+                "drowsiness": 0,
+                "left_eye": "No face",
+                "right_eye": "No face",
+                "status": "No face detected"
+            }
 
         left_eye = FatigueDetectionsRemote.leye_cascade.detectMultiScale(gray)
         right_eye = FatigueDetectionsRemote.reye_cascade.detectMultiScale(gray)
@@ -85,21 +97,34 @@ class FatigueDetectionsRemote:
                 left_pred = None
             break
 
-        # store metadata on the instance for debugging
         self.face_count = len(faces)
         self.left_count = len(left_eye)
         self.right_count = len(right_eye)
         self.left_pred = int(left_pred) if left_pred is not None else None
         self.right_pred = int(right_pred) if right_pred is not None else None
 
-        # If both eyes classified as closed (class 0) -> fatigue
-        fatigue = (self.left_pred == 0) and (self.right_pred == 0)
+        left_label = "Unknown"
+        right_label = "Unknown"
+        if left_pred is not None:
+            left_label = "Closed" if left_pred == 0 else "Open"
+        if right_pred is not None:
+            right_label = "Closed" if right_pred == 0 else "Open"
 
-        # Save the current frame snapshot used for reporting (static path)
+        closed_count = sum(1 for pred in [left_pred, right_pred] if pred == 0)
+        known_count = sum(1 for pred in [left_pred, right_pred] if pred is not None)
+        drowsiness = round((closed_count / known_count) * 100, 1) if known_count else 0
+        fatigue = (left_pred == 0) and (right_pred == 0)
+
         try:
             out_path = os.path.join(os.getcwd(), 'assets', 'static', 'drowsy_image.jpg')
             cv2.imwrite(out_path, frame)
         except Exception:
             pass
 
-        return bool(fatigue)
+        return {
+            "fatigue": bool(fatigue),
+            "drowsiness": drowsiness,
+            "left_eye": left_label,
+            "right_eye": right_label,
+            "status": "Drowsiness detected" if fatigue else "Eyes monitored"
+        }

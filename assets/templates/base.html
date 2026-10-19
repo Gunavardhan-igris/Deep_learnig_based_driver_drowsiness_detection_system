@@ -1,155 +1,194 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Driver Drowsiness Monitoring System</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
 
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"
+    ></script>
+    <script
+      nomodule
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"
+    ></script>
 
     <style>
-        :root {
-            --navy: #0a0f1e;
-            --navy-mid: #111827;
-            --blue: #2563eb;
-            --blue-light: #3b82f6;
-            --cyan: #06b6d4;
-            --red: #ef4444;
-            --slate: #64748b;
-            --light: #f1f5f9;
-            --white: #ffffff;
-            --border: rgba(255,255,255,0.08);
-            --card-bg: rgba(255,255,255,0.04);
+      :root {
+        --navy: #0a0f1e;
+        --navy-mid: #111827;
+        --blue: #2563eb;
+        --blue-light: #3b82f6;
+        --cyan: #06b6d4;
+        --red: #ef4444;
+        --slate: #64748b;
+        --light: #f1f5f9;
+        --white: #ffffff;
+        --border: rgba(255, 255, 255, 0.08);
+        --card-bg: rgba(255, 255, 255, 0.04);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: #f0f4f8;
+        color: var(--navy);
+        min-height: 100vh;
+      }
+
+      /* ─── NAV ─── */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 48px;
+        height: 68px;
+        background: rgba(10, 12, 16, 0.85);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+      }
+
+      .logo-icon {
+        width: 38px;
+        height: 38px;
+        background: var(--red);
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+      }
+
+      .logo-text {
+        font-size: 20px;
+        letter-spacing: 1.5px;
+        color: white;
+        line-height: 1;
+      }
+
+      .logo-text span {
+        color: var(--red);
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        list-style: none;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .nav-links a {
+        color: #cbd5e1;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.2s;
+        letter-spacing: 0.3px;
+      }
+
+      .nav-links a:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .nav-cta {
+        background: var(--red) !important;
+        color: white !important;
+      }
+
+      .main-content {
+        margin-top: 72px;
+        min-height: calc(100vh - 72px);
+      }
+
+      @media (max-width: 768px) {
+        nav {
+          padding: 0 1rem;
+          height: auto;
+          min-height: 64px;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          padding-top: 12px;
+          padding-bottom: 12px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: #f0f4f8;
-            color: var(--navy);
-            min-height: 100vh;
+        .nav-links {
+          gap: 4px;
         }
 
-        /* ─── NAV ─── */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 48px;
-    height: 68px;
-    background: rgba(10,12,16,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-  }
+        .nav-links a {
+          font-size: 0.75rem;
+          padding: 0.45rem 0.6rem;
+        }
 
-  .nav-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-decoration: none;
-  }
-
-  .logo-icon {
-    width: 38px; height: 38px;
-    background: var(--red);
-    border-radius: 10px;
-    display: grid;
-    place-items: center;
-    font-size: 18px;
-    box-shadow: 0 0 20px var(--red-glow);
-  }
-
-  .logo-text {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    letter-spacing: 1.5px;
-    color: var(--text);
-    line-height: 1;
-  }
-
-  .logo-text span { color: var(--red); }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    list-style: none;
-  }
-
-  .nav-links a {
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: all 0.2s;
-    letter-spacing: 0.3px;
-  }
-
-  .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
-
-  .nav-cta {
-    background: var(--red) !important;
-    color: white !important;
-    box-shadow: 0 0 16px var(--red-glow);
-  }
-
-  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 24px var(--red-glow) !important; }
-
-        /* Main */
         .main-content {
-            margin-top: 72px;
-            min-height: calc(100vh - 72px);
+          margin-top: 110px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .nav-links {
+          width: 100%;
         }
 
-        /* Mobile */
-        @media (max-width: 768px) {
-            .nav-container { padding: 0 1rem; height: 64px; }
-            .site-title { font-size: 0.95rem; }
-            .site-title span { display: none; }
-            .logo img { height: 38px; width: 38px; }
-            .nav-links { gap: 0; }
-            .nav-links a { padding: 0.4rem 0.65rem; font-size: 0.82rem; }
+        .nav-links a {
+          flex: 1 1 45%;
+          text-align: center;
         }
-
-        @media (max-width: 480px) {
-            .brand-divider { display: none; }
-            .nav-links a span { display: none; }
-        }
+      }
     </style>
     {% block extra_head %}{% endblock %}
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- NAV -->
     <nav>
-        <a class="nav-logo" href="#">
-            <div class="logo-icon">👁️</div>
-            <div class="logo-text">DRIVER<span>WATCH</span></div>
-        </a>
-        <ul class="nav-links">
-            <li><a href="{% url 'index' %}">Home</a></li>
-            <li><a href="#how-it-works">How It Works</a></li>
-            <li><a href="#features">Features</a></li>
-            <li><a href="{% url 'AutoistLogin' %}">Driver Login</a></li>
-            <li><a href="{% url 'AdminLogin' %}">Owner Login</a></li>
-            <li><a href="{% url 'AutoistRegister' %}" class="nav-cta">Driver Register</a></li>
-        </ul>
+      <a class="nav-logo" href="#">
+        <div class="logo-icon">👁️</div>
+        <div class="logo-text">DRIVER<span>WATCH</span></div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="{% url 'index' %}">Home</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="{% url 'AutoistLogin' %}">Driver Login</a></li>
+        <li><a href="{% url 'AdminLogin' %}">Owner Login</a></li>
+        <li>
+          <a href="{% url 'AutoistRegister' %}" class="nav-cta"
+            >Driver Register</a
+          >
+        </li>
+      </ul>
     </nav>
-    <main class="main-content">
-        {% block contents %}{% endblock %}
-    </main>
-
-</body>
+    <main class="main-content">{% block contents %}{% endblock %}</main>
+  </body>
 </html>

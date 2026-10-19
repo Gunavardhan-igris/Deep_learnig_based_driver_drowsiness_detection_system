@@ -1,895 +1,1379 @@
+{% extends 'base.html' %} {% load static %} {% block contents %}
 
-{% extends 'base.html' %}
-{% load static %}
-{% block contents %}
-
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Real-Time Driver Drowsiness Detection</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
-<style>
-  :root {
-    --bg: #0a0c10;
-    --surface: #111318;
-    --card: #161a22;
-    --border: rgba(255,255,255,0.07);
-    --red: #e53e3e;
-    --red-glow: rgba(229,62,62,0.25);
-    --amber: #f6ad55;
-    --green: #48bb78;
-    --text: #f0f2f5;
-    --muted: #7a8094;
-    --accent: #4fc3f7;
-  }
-
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    overflow-x: hidden;
-  }
-
-  /* ─── NOISE TEXTURE OVERLAY ─── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.5;
-  }
-
-  
-
-  /* ─── HERO ─── */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    padding: 100px 48px 60px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero-grid-bg {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(229,62,62,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(229,62,62,0.04) 1px, transparent 1px);
-    background-size: 48px 48px;
-    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
-  }
-
-  .hero-glow {
-    position: absolute;
-    width: 600px; height: 600px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(229,62,62,0.12) 0%, transparent 70%);
-    top: -100px; right: -100px;
-    animation: pulse-glow 4s ease-in-out infinite;
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.1); opacity: 1; }
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 2;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 80px;
-    align-items: center;
-    max-width: 1280px;
-    margin: 0 auto;
-    width: 100%;
-  }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(229,62,62,0.12);
-    border: 1px solid rgba(229,62,62,0.3);
-    color: var(--red);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 6px 14px;
-    border-radius: 100px;
-    margin-bottom: 24px;
-    animation: fadeUp 0.6s ease both;
-  }
-
-  .badge-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--red);
-    animation: blink 1.5s ease infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-  }
-
-  .hero-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(52px, 6vw, 86px);
-    line-height: 0.95;
-    letter-spacing: 2px;
-    margin-bottom: 24px;
-    animation: fadeUp 0.6s 0.1s ease both;
-  }
-
-  .hero-title .line-red { color: var(--red); display: block; }
-  .hero-title .line-white { color: var(--text); display: block; }
-
-  .hero-desc {
-    color: var(--muted);
-    font-size: 16px;
-    line-height: 1.75;
-    max-width: 440px;
-    margin-bottom: 40px;
-    font-weight: 300;
-    animation: fadeUp 0.6s 0.2s ease both;
-  }
-
-  .hero-actions {
-    display: flex;
-    gap: 16px;
-    animation: fadeUp 0.6s 0.3s ease both;
-  }
-
-  .btn-primary {
-    background: var(--red);
-    color: white;
-    border: none;
-    padding: 14px 32px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 0 24px var(--red-glow);
-    transition: all 0.2s;
-    letter-spacing: 0.3px;
-  }
-
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--red-glow); }
-
-  .btn-secondary {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-    padding: 14px 32px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-  }
-
-  .btn-secondary:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ─── EYE MONITORING VISUAL ─── */
-  .hero-visual {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeUp 0.6s 0.4s ease both;
-  }
-
-  .driver-monitor-card {
-    width: 100%;
-    max-width: 480px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 32px 64px rgba(0,0,0,0.5);
-    position: relative;
-  }
-
-  .monitor-header {
-    background: var(--surface);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .monitor-dot { width: 10px; height: 10px; border-radius: 50%; }
-  .dot-red { background: #ff5f57; }
-  .dot-yellow { background: #febc2e; }
-  .dot-green { background: #28c840; }
-
-  .monitor-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    margin-left: 8px;
-  }
-
-  .monitor-live {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--green);
-  }
-
-  .monitor-body {
-    padding: 24px;
-  }
-
-  /* SVG Eye tracking illustration */
-  .eye-feed {
-    width: 100%;
-    aspect-ratio: 16/10;
-    background: #0d1117;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.05);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-
-  .eye-feed svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  /* Scan line animation */
-  .scan-line {
-    position: absolute;
-    left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.6;
-    animation: scan 3s linear infinite;
-    top: 0;
-  }
-
-  @keyframes scan {
-    0% { top: 0; }
-    100% { top: 100%; }
-  }
-
-  .corner-tl, .corner-tr, .corner-bl, .corner-br {
-    position: absolute;
-    width: 16px; height: 16px;
-  }
-
-  .corner-tl { top: 8px; left: 8px; border-top: 2px solid var(--accent); border-left: 2px solid var(--accent); }
-  .corner-tr { top: 8px; right: 8px; border-top: 2px solid var(--accent); border-right: 2px solid var(--accent); }
-  .corner-bl { bottom: 8px; left: 8px; border-bottom: 2px solid var(--accent); border-left: 2px solid var(--accent); }
-  .corner-br { bottom: 8px; right: 8px; border-bottom: 2px solid var(--accent); border-right: 2px solid var(--accent); }
-
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-    text-align: center;
-  }
-
-  .stat-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-  }
-
-  .stat-value {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px;
-    line-height: 1;
-  }
-
-  .stat-ok { color: var(--green); }
-  .stat-warn { color: var(--amber); }
-  .stat-alert { color: var(--red); }
-
-  /* ─── STATS STRIP ─── */
-  .stats-strip {
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 32px 48px;
-    background: var(--surface);
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-  }
-
-  .strip-stat {
-    text-align: center;
-    padding: 0 24px;
-    border-right: 1px solid var(--border);
-  }
-
-  .strip-stat:last-child { border-right: none; }
-
-  .strip-number {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 48px;
-    color: var(--red);
-    line-height: 1;
-    display: block;
-  }
-
-  .strip-label {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 4px;
-    font-weight: 400;
-  }
-
-  /* ─── HOW IT WORKS ─── */
-  .section {
-    padding: 100px 48px;
-    max-width: 1280px;
-    margin: 0 auto;
-  }
-
-  .section-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--red);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .section-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(36px, 4vw, 52px);
-    letter-spacing: 1.5px;
-    margin-bottom: 56px;
-    line-height: 1;
-  }
-
-  .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
-    background: var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .step-card {
-    background: var(--card);
-    padding: 48px 36px;
-    position: relative;
-    transition: background 0.3s;
-  }
-
-  .step-card:hover { background: #1a1f2a; }
-
-  .step-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 80px;
-    color: rgba(229,62,62,0.12);
-    line-height: 1;
-    position: absolute;
-    top: 20px; right: 24px;
-  }
-
-  .step-icon {
-    font-size: 36px;
-    margin-bottom: 20px;
-    display: block;
-  }
-
-  .step-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: var(--text);
-  }
-
-  .step-desc {
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.7;
-    font-weight: 300;
-  }
-
-  /* ─── FEATURES ─── */
-  .features-section {
-    padding: 0 48px 100px;
-  }
-
-  .features-inner {
-    max-width: 1280px;
-    margin: 0 auto;
-  }
-
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-
-  .feature-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .feature-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, var(--red-glow), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .feature-card:hover { border-color: rgba(229,62,62,0.3); transform: translateY(-4px); }
-  .feature-card:hover::before { opacity: 1; }
-
-  .feature-icon {
-    width: 48px; height: 48px;
-    background: rgba(229,62,62,0.12);
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    font-size: 22px;
-    margin-bottom: 20px;
-    position: relative;
-  }
-
-  .feature-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    position: relative;
-  }
-
-  .feature-desc {
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.7;
-    font-weight: 300;
-    position: relative;
-  }
-
-  /* ─── ALERT DEMO ─── */
-  .alert-section {
-    padding: 0 48px 100px;
-    background: transparent;
-  }
-
-  .alert-inner {
-    max-width: 1280px;
-    margin: 0 auto;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 64px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 64px;
-    align-items: center;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .alert-inner::after {
-    content: '';
-    position: absolute;
-    right: -100px; top: -100px;
-    width: 400px; height: 400px;
-    background: radial-gradient(circle, rgba(229,62,62,0.08) 0%, transparent 70%);
-  }
-
-  .alert-levels {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .alert-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    transition: all 0.3s;
-    cursor: default;
-  }
-
-  .alert-item:hover { transform: translateX(4px); }
-
-  .alert-normal { background: rgba(72,187,120,0.08); border-color: rgba(72,187,120,0.2); }
-  .alert-caution { background: rgba(246,173,85,0.08); border-color: rgba(246,173,85,0.2); }
-  .alert-danger { background: rgba(229,62,62,0.1); border-color: rgba(229,62,62,0.3); animation: pulse-border 2s ease infinite; }
-
-  @keyframes pulse-border {
-    0%, 100% { border-color: rgba(229,62,62,0.3); }
-    50% { border-color: rgba(229,62,62,0.7); }
-  }
-
-  .alert-dot-lg { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-  .dot-g { background: var(--green); box-shadow: 0 0 8px rgba(72,187,120,0.5); }
-  .dot-a { background: var(--amber); box-shadow: 0 0 8px rgba(246,173,85,0.5); }
-  .dot-r { background: var(--red); box-shadow: 0 0 8px rgba(229,62,62,0.6); animation: blink 1s ease infinite; }
-
-  .alert-text-label { font-weight: 600; font-size: 15px; }
-  .alert-text-desc { font-size: 13px; color: var(--muted); margin-top: 2px; }
-
-  /* ─── FOOTER ─── */
-  footer {
-    border-top: 1px solid var(--border);
-    background: var(--surface);
-    padding: 48px;
-    text-align: center;
-  }
-
-  .footer-logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .footer-logo span { color: var(--red); }
-
-  .footer-copy {
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 300;
-  }
-
-  /* ─── EYE SVG ANIMATION ─── */
-  .eye-blink {
-    animation: eyeBlink 4s ease-in-out infinite;
-    transform-origin: center;
-  }
-
-  @keyframes eyeBlink {
-    0%, 90%, 100% { transform: scaleY(1); }
-    95% { transform: scaleY(0.05); }
-  }
-
-  .pupil-track {
-    animation: pupilMove 6s ease-in-out infinite;
-  }
-
-  @keyframes pupilMove {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(6px); }
-    75% { transform: translateX(-6px); }
-  }
-
-  .face-box {
-    animation: faceShift 8s ease-in-out infinite;
-  }
-
-  @keyframes faceShift {
-    0%, 100% { transform: translateX(0px); }
-    30% { transform: translateX(8px); }
-    70% { transform: translateX(-5px); }
-  }
-</style>
-</head>
-<body>
-
-
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-grid-bg"></div>
-  <div class="hero-glow"></div>
-
-  <div class="hero-content">
-    <div class="hero-left">
-      <div class="hero-badge">
-        <span class="badge-dot"></span>
-        SYSTEM ACTIVE — MONITORING
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time Driver Drowsiness Detection</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0a0c10;
+        --surface: #111318;
+        --card: #161a22;
+        --border: rgba(255, 255, 255, 0.07);
+        --red: #e53e3e;
+        --red-glow: rgba(229, 62, 62, 0.25);
+        --amber: #f6ad55;
+        --green: #48bb78;
+        --text: #f0f2f5;
+        --muted: #7a8094;
+        --accent: #4fc3f7;
+      }
+
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "DM Sans", sans-serif;
+        overflow-x: hidden;
+      }
+
+      /* ─── NOISE TEXTURE OVERLAY ─── */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.5;
+      }
+
+      /* ─── HERO ─── */
+      .hero {
+        min-height: 82vh;
+        display: flex;
+        align-items: center;
+        padding: 72px 48px 30px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-grid-bg {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(229, 62, 62, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(229, 62, 62, 0.04) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: radial-gradient(
+          ellipse 80% 80% at 50% 50%,
+          black 40%,
+          transparent 100%
+        );
+      }
+
+      .hero-glow {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(229, 62, 62, 0.12) 0%,
+          transparent 70%
+        );
+        top: -100px;
+        right: -100px;
+        animation: pulse-glow 4s ease-in-out infinite;
+      }
+
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 1;
+        }
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: center;
+        max-width: 1280px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(229, 62, 62, 0.12);
+        border: 1px solid rgba(229, 62, 62, 0.3);
+        color: var(--red);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        padding: 6px 14px;
+        border-radius: 100px;
+        margin-bottom: 18px;
+        animation: fadeUp 0.6s ease both;
+      }
+
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--red);
+        animation: blink 1.5s ease infinite;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.2;
+        }
+      }
+
+      .hero-title {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(52px, 6vw, 86px);
+        line-height: 0.95;
+        letter-spacing: 2px;
+        margin-bottom: 18px;
+        animation: fadeUp 0.6s 0.1s ease both;
+      }
+
+      .hero-title .line-red {
+        color: var(--red);
+        display: block;
+      }
+      .hero-title .line-white {
+        color: var(--text);
+        display: block;
+      }
+
+      .hero-desc {
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.75;
+        max-width: 440px;
+        margin-bottom: 30px;
+        font-weight: 300;
+        animation: fadeUp 0.6s 0.2s ease both;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 16px;
+        animation: fadeUp 0.6s 0.3s ease both;
+      }
+
+      .btn-primary {
+        background: var(--red);
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 0 24px var(--red-glow);
+        transition: all 0.2s;
+        letter-spacing: 0.3px;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px var(--red-glow);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 14px 32px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+      }
+
+      .btn-secondary:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ─── EYE MONITORING VISUAL ─── */
+      .hero-visual {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeUp 0.6s 0.4s ease both;
+      }
+
+      .driver-monitor-card {
+        width: 100%;
+        max-width: 480px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5);
+        position: relative;
+      }
+
+      .monitor-header {
+        background: var(--surface);
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .monitor-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .dot-red {
+        background: #ff5f57;
+      }
+      .dot-yellow {
+        background: #febc2e;
+      }
+      .dot-green {
+        background: #28c840;
+      }
+
+      .monitor-title {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        color: var(--muted);
+        margin-left: 8px;
+      }
+
+      .monitor-live {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--green);
+      }
+
+      .monitor-body {
+        padding: 24px;
+      }
+
+      /* SVG Eye tracking illustration */
+      .eye-feed {
+        width: 100%;
+        aspect-ratio: 16/10;
+        background: #0d1117;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .eye-feed svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Scan line animation */
+      .scan-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--accent),
+          transparent
+        );
+        opacity: 0.6;
+        animation: scan 3s linear infinite;
+        top: 0;
+      }
+
+      @keyframes scan {
+        0% {
+          top: 0;
+        }
+        100% {
+          top: 100%;
+        }
+      }
+
+      .corner-tl,
+      .corner-tr,
+      .corner-bl,
+      .corner-br {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+      }
+
+      .corner-tl {
+        top: 8px;
+        left: 8px;
+        border-top: 2px solid var(--accent);
+        border-left: 2px solid var(--accent);
+      }
+      .corner-tr {
+        top: 8px;
+        right: 8px;
+        border-top: 2px solid var(--accent);
+        border-right: 2px solid var(--accent);
+      }
+      .corner-bl {
+        bottom: 8px;
+        left: 8px;
+        border-bottom: 2px solid var(--accent);
+        border-left: 2px solid var(--accent);
+      }
+      .corner-br {
+        bottom: 8px;
+        right: 8px;
+        border-bottom: 2px solid var(--accent);
+        border-right: 2px solid var(--accent);
+      }
+
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+      }
+
+      .stat-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+
+      .stat-value {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 26px;
+        line-height: 1;
+      }
+
+      .stat-ok {
+        color: var(--green);
+      }
+      .stat-warn {
+        color: var(--amber);
+      }
+      .stat-alert {
+        color: var(--red);
+      }
+
+      /* ─── STATS STRIP ─── */
+      .stats-strip {
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 32px 48px;
+        background: var(--surface);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+      }
+
+      .strip-stat {
+        text-align: center;
+        padding: 0 24px;
+        border-right: 1px solid var(--border);
+      }
+
+      .strip-stat:last-child {
+        border-right: none;
+      }
+
+      .strip-number {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 48px;
+        color: var(--red);
+        line-height: 1;
+        display: block;
+      }
+
+      .strip-label {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+        font-weight: 400;
+      }
+
+      /* ─── HOW IT WORKS ─── */
+      .section {
+        padding: 100px 48px;
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+
+      .section-tag {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        color: var(--red);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+
+      .section-title {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(36px, 4vw, 52px);
+        letter-spacing: 1.5px;
+        margin-bottom: 56px;
+        line-height: 1;
+      }
+
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+        background: var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      .step-card {
+        background: var(--card);
+        padding: 48px 36px;
+        position: relative;
+        transition: background 0.3s;
+      }
+
+      .step-card:hover {
+        background: #1a1f2a;
+      }
+
+      .step-num {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 80px;
+        color: rgba(229, 62, 62, 0.12);
+        line-height: 1;
+        position: absolute;
+        top: 20px;
+        right: 24px;
+      }
+
+      .step-icon {
+        font-size: 36px;
+        margin-bottom: 20px;
+        display: block;
+      }
+
+      .step-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text);
+      }
+
+      .step-desc {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+        font-weight: 300;
+      }
+
+      /* ─── FEATURES ─── */
+      .features-section {
+        padding: 0 48px 100px;
+      }
+
+      .features-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+
+      .feature-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, var(--red-glow), transparent);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .feature-card:hover {
+        border-color: rgba(229, 62, 62, 0.3);
+        transform: translateY(-4px);
+      }
+      .feature-card:hover::before {
+        opacity: 1;
+      }
+
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(229, 62, 62, 0.12);
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      .feature-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        position: relative;
+      }
+
+      .feature-desc {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+        font-weight: 300;
+        position: relative;
+      }
+
+      /* ─── ALERT DEMO ─── */
+      .alert-section {
+        padding: 0 48px 100px;
+        background: transparent;
+      }
+
+      .alert-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 64px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 64px;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .alert-inner::after {
+        content: "";
+        position: absolute;
+        right: -100px;
+        top: -100px;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(
+          circle,
+          rgba(229, 62, 62, 0.08) 0%,
+          transparent 70%
+        );
+      }
+
+      .alert-levels {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .alert-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        transition: all 0.3s;
+        cursor: default;
+      }
+
+      .alert-item:hover {
+        transform: translateX(4px);
+      }
+
+      .alert-normal {
+        background: rgba(72, 187, 120, 0.08);
+        border-color: rgba(72, 187, 120, 0.2);
+      }
+      .alert-caution {
+        background: rgba(246, 173, 85, 0.08);
+        border-color: rgba(246, 173, 85, 0.2);
+      }
+      .alert-danger {
+        background: rgba(229, 62, 62, 0.1);
+        border-color: rgba(229, 62, 62, 0.3);
+        animation: pulse-border 2s ease infinite;
+      }
+
+      @keyframes pulse-border {
+        0%,
+        100% {
+          border-color: rgba(229, 62, 62, 0.3);
+        }
+        50% {
+          border-color: rgba(229, 62, 62, 0.7);
+        }
+      }
+
+      .alert-dot-lg {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .dot-g {
+        background: var(--green);
+        box-shadow: 0 0 8px rgba(72, 187, 120, 0.5);
+      }
+      .dot-a {
+        background: var(--amber);
+        box-shadow: 0 0 8px rgba(246, 173, 85, 0.5);
+      }
+      .dot-r {
+        background: var(--red);
+        box-shadow: 0 0 8px rgba(229, 62, 62, 0.6);
+        animation: blink 1s ease infinite;
+      }
+
+      .alert-text-label {
+        font-weight: 600;
+        font-size: 15px;
+      }
+      .alert-text-desc {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      /* ─── FOOTER ─── */
+      footer {
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+        padding: 48px;
+        text-align: center;
+      }
+
+      .footer-logo {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 22px;
+        letter-spacing: 2px;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .footer-logo span {
+        color: var(--red);
+      }
+
+      .footer-copy {
+        font-size: 13px;
+        color: var(--muted);
+        font-weight: 300;
+      }
+
+      /* ─── EYE SVG ANIMATION ─── */
+      .eye-blink {
+        animation: eyeBlink 4s ease-in-out infinite;
+        transform-origin: center;
+      }
+
+      @keyframes eyeBlink {
+        0%,
+        90%,
+        100% {
+          transform: scaleY(1);
+        }
+        95% {
+          transform: scaleY(0.05);
+        }
+      }
+
+      .pupil-track {
+        animation: pupilMove 6s ease-in-out infinite;
+      }
+
+      @keyframes pupilMove {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(6px);
+        }
+        75% {
+          transform: translateX(-6px);
+        }
+      }
+
+      .face-box {
+        animation: faceShift 8s ease-in-out infinite;
+      }
+
+      @keyframes faceShift {
+        0%,
+        100% {
+          transform: translateX(0px);
+        }
+        30% {
+          transform: translateX(8px);
+        }
+        70% {
+          transform: translateX(-5px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-grid-bg"></div>
+      <div class="hero-glow"></div>
+
+      <div class="hero-content">
+        <div class="hero-left">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            SYSTEM ACTIVE — MONITORING
+          </div>
+          <h1 class="hero-title">
+            <span class="line-red">EYES ON</span>
+            <span class="line-white">THE ROAD.</span>
+            <span class="line-white">ALWAYS.</span>
+          </h1>
+          <p class="hero-desc">
+            Advanced AI-powered drowsiness detection monitors your eye movement,
+            blink rate, and head position in real time — alerting you before
+            fatigue becomes danger.
+          </p>
+          <div class="hero-actions">
+            <a href="#" class="btn-primary">🚀 Get Started</a>
+            <a href="#how-it-works" class="btn-secondary">↓ See How It Works</a>
+          </div>
+        </div>
+
+        <!-- LIVE MONITOR CARD -->
+        <div class="hero-visual">
+          <div class="driver-monitor-card">
+            <div class="monitor-header">
+              <div class="monitor-dot dot-red"></div>
+              <div class="monitor-dot dot-yellow"></div>
+              <div class="monitor-dot dot-green"></div>
+              <span class="monitor-title">drowsiness_monitor.py</span>
+              <div class="monitor-live">
+                <span class="badge-dot"></span> LIVE
+              </div>
+            </div>
+            <div class="monitor-body">
+              <!-- Eye tracking SVG feed -->
+              <div class="eye-feed">
+                <div class="scan-line"></div>
+                <div class="corner-tl"></div>
+                <div class="corner-tr"></div>
+                <div class="corner-bl"></div>
+                <div class="corner-br"></div>
+
+                <svg
+                  viewBox="0 0 380 220"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <!-- Background face silhouette -->
+                  <g class="face-box">
+                    <!-- Head outline -->
+                    <ellipse
+                      cx="190"
+                      cy="115"
+                      rx="85"
+                      ry="95"
+                      fill="#161a22"
+                      stroke="#2a3040"
+                      stroke-width="1.5"
+                    />
+                    <!-- Neck -->
+                    <rect
+                      x="170"
+                      y="195"
+                      width="40"
+                      height="30"
+                      rx="4"
+                      fill="#161a22"
+                      stroke="#2a3040"
+                      stroke-width="1.5"
+                    />
+
+                    <!-- Detection box around face -->
+                    <rect
+                      x="100"
+                      y="20"
+                      width="180"
+                      height="195"
+                      rx="6"
+                      fill="none"
+                      stroke="#4fc3f7"
+                      stroke-width="1"
+                      stroke-dasharray="4 4"
+                      opacity="0.6"
+                    />
+
+                    <!-- EYES -->
+                    <!-- Left Eye -->
+                    <g class="eye-blink" style="transform-origin: 148px 108px">
+                      <ellipse
+                        cx="148"
+                        cy="108"
+                        rx="22"
+                        ry="13"
+                        fill="#0d1117"
+                        stroke="#4fc3f7"
+                        stroke-width="1.5"
+                      />
+                      <g class="pupil-track">
+                        <circle cx="148" cy="108" r="8" fill="#1a2535" />
+                        <circle
+                          cx="148"
+                          cy="108"
+                          r="5"
+                          fill="#e53e3e"
+                          opacity="0.8"
+                        />
+                        <circle
+                          cx="150"
+                          cy="106"
+                          r="2"
+                          fill="white"
+                          opacity="0.8"
+                        />
+                        <!-- Iris ring -->
+                        <circle
+                          cx="148"
+                          cy="108"
+                          r="8"
+                          fill="none"
+                          stroke="#4fc3f7"
+                          stroke-width="0.5"
+                          opacity="0.5"
+                        />
+                      </g>
+                      <!-- EAR tracking points -->
+                      <circle
+                        cx="126"
+                        cy="108"
+                        r="2"
+                        fill="#4fc3f7"
+                        opacity="0.6"
+                      />
+                      <circle
+                        cx="170"
+                        cy="108"
+                        r="2"
+                        fill="#4fc3f7"
+                        opacity="0.6"
+                      />
+                      <circle
+                        cx="148"
+                        cy="95"
+                        r="2"
+                        fill="#4fc3f7"
+                        opacity="0.6"
+                      />
+                      <circle
+                        cx="148"
+                        cy="121"
+                        r="2"
+                        fill="#4fc3f7"
+                        opacity="0.6"
+                      />
+                    </g>
+
+                    <!-- Right Eye -->
+                    <g
+                      class="eye-blink"
+                      style="
+                        transform-origin: 232px 108px;
+                        animation-delay: 0.1s;
+                      "
+                    >
+                      <ellipse
+                        cx="232"
+                        cy="108"
+                        rx="22"
+                        ry="13"
+                        fill="#0d1117"
+                        stroke="#4fc3f7"
+                        stroke-width="1.5"
+                      />
+                      <g class="pupil-track">
+                        <circle cx="232" cy="108" r="8" fill="#1a2535" />
+                        <circle
+                          cx="232"
+                          cy="108"
+                          r="5"
+                          fill="#e53e3e"
+                          opacity="0.8"
+                        />
+                        <circle
+                          cx="234"
+                          cy="106"
+                          r="2"
+                          fill="white"
+                          opacity="0.8"
+                        />
+                        <circle
+                          cx="232"
+                          cy="108"
+                          r="8"
+                          fill="none"
+                          stroke="#4fc3f7"
+                          stroke-width="0.5"
+                          opacity="0.5"
+                        />
+                      </g>
+                      <circle
+                        cx="210"
+                        cy="108"
+                        r="2"
+                        fill="#4fc3f7"
+                        opacity="0.6"
+                      />
+                      <circle
+                        cx="254"
+                        cy="108"
+                        r="2"
+                        fill="#4fc3f7"
+                        opacity="0.6"
+                      />
+                      <circle
+                        cx="232"
+                        cy="95"
+                        r="2"
+                        fill="#4fc3f7"
+                        opacity="0.6"
+                      />
+                      <circle
+                        cx="232"
+                        cy="121"
+                        r="2"
+                        fill="#4fc3f7"
+                        opacity="0.6"
+                      />
+                    </g>
+
+                    <!-- Nose tip landmark -->
+                    <circle
+                      cx="190"
+                      cy="140"
+                      r="2.5"
+                      fill="#4fc3f7"
+                      opacity="0.5"
+                    />
+                    <!-- Mouth landmarks -->
+                    <circle
+                      cx="172"
+                      cy="158"
+                      r="2"
+                      fill="#4fc3f7"
+                      opacity="0.4"
+                    />
+                    <circle
+                      cx="190"
+                      cy="162"
+                      r="2"
+                      fill="#4fc3f7"
+                      opacity="0.4"
+                    />
+                    <circle
+                      cx="208"
+                      cy="158"
+                      r="2"
+                      fill="#4fc3f7"
+                      opacity="0.4"
+                    />
+
+                    <!-- Connecting mesh lines (face mesh) -->
+                    <line
+                      x1="148"
+                      y1="95"
+                      x2="232"
+                      y2="95"
+                      stroke="#4fc3f7"
+                      stroke-width="0.4"
+                      opacity="0.2"
+                    />
+                    <line
+                      x1="148"
+                      y1="121"
+                      x2="190"
+                      y2="140"
+                      stroke="#4fc3f7"
+                      stroke-width="0.4"
+                      opacity="0.2"
+                    />
+                    <line
+                      x1="232"
+                      y1="121"
+                      x2="190"
+                      y2="140"
+                      stroke="#4fc3f7"
+                      stroke-width="0.4"
+                      opacity="0.2"
+                    />
+                    <line
+                      x1="190"
+                      y1="140"
+                      x2="190"
+                      y2="162"
+                      stroke="#4fc3f7"
+                      stroke-width="0.4"
+                      opacity="0.2"
+                    />
+                  </g>
+
+                  <!-- HUD overlays -->
+                  <!-- Top-left status -->
+                  <text
+                    x="8"
+                    y="18"
+                    fill="#4fc3f7"
+                    font-family="monospace"
+                    font-size="9"
+                    opacity="0.7"
+                  >
+                    PERCLOS: 0.12
+                  </text>
+                  <text
+                    x="8"
+                    y="30"
+                    fill="#48bb78"
+                    font-family="monospace"
+                    font-size="9"
+                    opacity="0.7"
+                  >
+                    STATUS: ALERT
+                  </text>
+
+                  <!-- Top-right -->
+                  <text
+                    x="290"
+                    y="18"
+                    fill="#4fc3f7"
+                    font-family="monospace"
+                    font-size="9"
+                    opacity="0.7"
+                    text-anchor="end"
+                  >
+                    FPS: 30
+                  </text>
+                  <text
+                    x="372"
+                    y="18"
+                    fill="#7a8094"
+                    font-family="monospace"
+                    font-size="9"
+                    opacity="0.6"
+                  >
+                    REC●
+                  </text>
+
+                  <!-- Bottom data -->
+                  <text
+                    x="8"
+                    y="212"
+                    fill="#7a8094"
+                    font-family="monospace"
+                    font-size="8"
+                    opacity="0.6"
+                  >
+                    EAR: 0.38 | MAR: 0.05 | BLINK: 14/min
+                  </text>
+                  <text
+                    x="372"
+                    y="212"
+                    fill="#7a8094"
+                    font-family="monospace"
+                    font-size="8"
+                    opacity="0.6"
+                    text-anchor="end"
+                  >
+                    CAM_01
+                  </text>
+                </svg>
+              </div>
+
+              <!-- Stats -->
+              <div class="stats-row">
+                <div class="stat-card">
+                  <div class="stat-label">EYE RATIO</div>
+                  <div class="stat-value stat-ok">0.38</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">BLINK/MIN</div>
+                  <div class="stat-value stat-ok">14</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">STATUS</div>
+                  <div class="stat-value stat-ok">OK</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <h1 class="hero-title">
-        <span class="line-red">EYES ON</span>
-        <span class="line-white">THE ROAD.</span>
-        <span class="line-white">ALWAYS.</span>
-      </h1>
-      <p class="hero-desc">
-        Advanced AI-powered drowsiness detection monitors your eye movement, blink rate, and head position in real time — alerting you before fatigue becomes danger.
+    </section>
+
+    <!-- STATS STRIP -->
+    <div class="stats-strip">
+      <div class="strip-stat">
+        <span class="strip-number">97%</span>
+        <div class="strip-label">Detection Accuracy</div>
+      </div>
+      <div class="strip-stat">
+        <span class="strip-number">&lt;1s</span>
+        <div class="strip-label">Alert Response Time</div>
+      </div>
+      <div class="strip-stat">
+        <span class="strip-number">30</span>
+        <div class="strip-label">Frames Per Second</div>
+      </div>
+      <div class="strip-stat">
+        <span class="strip-number">24/7</span>
+        <div class="strip-label">Continuous Monitoring</div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" id="how-it-works">
+      <div class="section-tag">// HOW IT WORKS</div>
+      <h2 class="section-title">THREE STEPS TO SAFER DRIVING</h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <span class="step-num">01</span>
+          <span class="step-icon">📷</span>
+          <div class="step-title">Camera Capture</div>
+          <p class="step-desc">
+            Your device camera continuously captures your face at 30 fps. No
+            special hardware needed — works with any standard webcam or phone
+            camera.
+          </p>
+        </div>
+        <div class="step-card">
+          <span class="step-num">02</span>
+          <span class="step-icon">🧠</span>
+          <div class="step-title">AI Analysis</div>
+          <p class="step-desc">
+            Our AI model tracks 68 facial landmarks in real time — analyzing eye
+            aspect ratio (EAR), blink frequency, head tilt, and PERCLOS scores.
+          </p>
+        </div>
+        <div class="step-card">
+          <span class="step-num">03</span>
+          <span class="step-icon">🔔</span>
+          <div class="step-title">Instant Alert</div>
+          <p class="step-desc">
+            When drowsiness is detected, the system triggers an immediate
+            audio-visual alert and notifies the fleet owner dashboard in real
+            time.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features-section" id="features">
+      <div class="features-inner">
+        <div class="section-tag">// FEATURES</div>
+        <h2 class="section-title">BUILT FOR REAL ROADS</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">👁️</div>
+            <div class="feature-title">Eye Aspect Ratio (EAR) Tracking</div>
+            <p class="feature-desc">
+              Monitors the ratio between eye height and width to detect
+              prolonged closures and unusual blink patterns with high precision.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📐</div>
+            <div class="feature-title">Head Pose Estimation</div>
+            <p class="feature-desc">
+              Detects head nodding, tilting, and drooping — early signs of
+              microsleep — using 3D facial landmark analysis.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <div class="feature-title">Real-Time Processing</div>
+            <p class="feature-desc">
+              Processes video at 30 frames per second with sub-second latency,
+              ensuring alerts fire before danger sets in.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <div class="feature-title">Owner Dashboard</div>
+            <p class="feature-desc">
+              Fleet owners get a live dashboard with driver status, trip
+              history, drowsiness events, and exportable reports.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <div class="feature-title">Secure & Private</div>
+            <p class="feature-desc">
+              Video is processed locally on-device. No raw footage is stored or
+              transmitted — only anonymized event metadata.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🌙</div>
+            <div class="feature-title">Night Mode</div>
+            <p class="feature-desc">
+              IR-compatible algorithms and adaptive contrast ensure accurate
+              detection even in low-light and nighttime conditions.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ALERT LEVELS -->
+    <section class="alert-section">
+      <div class="alert-inner">
+        <div>
+          <div class="section-tag">// ALERT SYSTEM</div>
+          <h2 class="section-title" style="margin-bottom: 16px">
+            THREE-TIER<br />ALERT LEVELS
+          </h2>
+          <p
+            style="
+              color: var(--muted);
+              font-size: 15px;
+              line-height: 1.7;
+              font-weight: 300;
+            "
+          >
+            The system escalates through three levels based on real-time fatigue
+            indicators — from a gentle nudge to a full emergency alert sent to
+            the fleet owner.
+          </p>
+        </div>
+        <div class="alert-levels">
+          <div class="alert-item alert-normal">
+            <div class="alert-dot-lg dot-g"></div>
+            <div>
+              <div class="alert-text-label" style="color: var(--green)">
+                NORMAL — Driver Alert
+              </div>
+              <div class="alert-text-desc">
+                EAR within range, blink rate normal, head position stable.
+              </div>
+            </div>
+          </div>
+          <div class="alert-item alert-caution">
+            <div class="alert-dot-lg dot-a"></div>
+            <div>
+              <div class="alert-text-label" style="color: var(--amber)">
+                CAUTION — Early Fatigue Detected
+              </div>
+              <div class="alert-text-desc">
+                Slower blinks, slight head droop. Gentle audio chime triggered.
+              </div>
+            </div>
+          </div>
+          <div class="alert-item alert-danger">
+            <div class="alert-dot-lg dot-r"></div>
+            <div>
+              <div class="alert-text-label" style="color: var(--red)">
+                DANGER — Drowsiness Confirmed
+              </div>
+              <div class="alert-text-desc">
+                Eyes closing &gt;2s, head nodding. Alarm + owner notification
+                fired.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-logo">DRIVER<span>WATCH</span></div>
+      <p class="footer-copy">
+        © 2026 Real-Time Driver Drowsiness Detection System. All rights
+        reserved.
       </p>
-      <div class="hero-actions">
-        <a href="#" class="btn-primary">🚀 Get Started</a>
-        <a href="#how-it-works" class="btn-secondary">↓ See How It Works</a>
-      </div>
-    </div>
-
-    <!-- LIVE MONITOR CARD -->
-    <div class="hero-visual">
-      <div class="driver-monitor-card">
-        <div class="monitor-header">
-          <div class="monitor-dot dot-red"></div>
-          <div class="monitor-dot dot-yellow"></div>
-          <div class="monitor-dot dot-green"></div>
-          <span class="monitor-title">drowsiness_monitor.py</span>
-          <div class="monitor-live">
-            <span class="badge-dot"></span> LIVE
-          </div>
-        </div>
-        <div class="monitor-body">
-          <!-- Eye tracking SVG feed -->
-          <div class="eye-feed">
-            <div class="scan-line"></div>
-            <div class="corner-tl"></div>
-            <div class="corner-tr"></div>
-            <div class="corner-bl"></div>
-            <div class="corner-br"></div>
-
-            <svg viewBox="0 0 380 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Background face silhouette -->
-              <g class="face-box">
-                <!-- Head outline -->
-                <ellipse cx="190" cy="115" rx="85" ry="95" fill="#161a22" stroke="#2a3040" stroke-width="1.5"/>
-                <!-- Neck -->
-                <rect x="170" y="195" width="40" height="30" rx="4" fill="#161a22" stroke="#2a3040" stroke-width="1.5"/>
-
-                <!-- Detection box around face -->
-                <rect x="100" y="20" width="180" height="195" rx="6" fill="none" stroke="#4fc3f7" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
-
-                <!-- EYES -->
-                <!-- Left Eye -->
-                <g class="eye-blink" style="transform-origin: 148px 108px">
-                  <ellipse cx="148" cy="108" rx="22" ry="13" fill="#0d1117" stroke="#4fc3f7" stroke-width="1.5"/>
-                  <g class="pupil-track">
-                    <circle cx="148" cy="108" r="8" fill="#1a2535"/>
-                    <circle cx="148" cy="108" r="5" fill="#e53e3e" opacity="0.8"/>
-                    <circle cx="150" cy="106" r="2" fill="white" opacity="0.8"/>
-                    <!-- Iris ring -->
-                    <circle cx="148" cy="108" r="8" fill="none" stroke="#4fc3f7" stroke-width="0.5" opacity="0.5"/>
-                  </g>
-                  <!-- EAR tracking points -->
-                  <circle cx="126" cy="108" r="2" fill="#4fc3f7" opacity="0.6"/>
-                  <circle cx="170" cy="108" r="2" fill="#4fc3f7" opacity="0.6"/>
-                  <circle cx="148" cy="95" r="2" fill="#4fc3f7" opacity="0.6"/>
-                  <circle cx="148" cy="121" r="2" fill="#4fc3f7" opacity="0.6"/>
-                </g>
-
-                <!-- Right Eye -->
-                <g class="eye-blink" style="transform-origin: 232px 108px; animation-delay: 0.1s">
-                  <ellipse cx="232" cy="108" rx="22" ry="13" fill="#0d1117" stroke="#4fc3f7" stroke-width="1.5"/>
-                  <g class="pupil-track">
-                    <circle cx="232" cy="108" r="8" fill="#1a2535"/>
-                    <circle cx="232" cy="108" r="5" fill="#e53e3e" opacity="0.8"/>
-                    <circle cx="234" cy="106" r="2" fill="white" opacity="0.8"/>
-                    <circle cx="232" cy="108" r="8" fill="none" stroke="#4fc3f7" stroke-width="0.5" opacity="0.5"/>
-                  </g>
-                  <circle cx="210" cy="108" r="2" fill="#4fc3f7" opacity="0.6"/>
-                  <circle cx="254" cy="108" r="2" fill="#4fc3f7" opacity="0.6"/>
-                  <circle cx="232" cy="95" r="2" fill="#4fc3f7" opacity="0.6"/>
-                  <circle cx="232" cy="121" r="2" fill="#4fc3f7" opacity="0.6"/>
-                </g>
-
-                <!-- Nose tip landmark -->
-                <circle cx="190" cy="140" r="2.5" fill="#4fc3f7" opacity="0.5"/>
-                <!-- Mouth landmarks -->
-                <circle cx="172" cy="158" r="2" fill="#4fc3f7" opacity="0.4"/>
-                <circle cx="190" cy="162" r="2" fill="#4fc3f7" opacity="0.4"/>
-                <circle cx="208" cy="158" r="2" fill="#4fc3f7" opacity="0.4"/>
-
-                <!-- Connecting mesh lines (face mesh) -->
-                <line x1="148" y1="95" x2="232" y2="95" stroke="#4fc3f7" stroke-width="0.4" opacity="0.2"/>
-                <line x1="148" y1="121" x2="190" y2="140" stroke="#4fc3f7" stroke-width="0.4" opacity="0.2"/>
-                <line x1="232" y1="121" x2="190" y2="140" stroke="#4fc3f7" stroke-width="0.4" opacity="0.2"/>
-                <line x1="190" y1="140" x2="190" y2="162" stroke="#4fc3f7" stroke-width="0.4" opacity="0.2"/>
-              </g>
-
-              <!-- HUD overlays -->
-              <!-- Top-left status -->
-              <text x="8" y="18" fill="#4fc3f7" font-family="monospace" font-size="9" opacity="0.7">PERCLOS: 0.12</text>
-              <text x="8" y="30" fill="#48bb78" font-family="monospace" font-size="9" opacity="0.7">STATUS: ALERT</text>
-
-              <!-- Top-right -->
-              <text x="290" y="18" fill="#4fc3f7" font-family="monospace" font-size="9" opacity="0.7" text-anchor="end">FPS: 30</text>
-              <text x="372" y="18" fill="#7a8094" font-family="monospace" font-size="9" opacity="0.6">REC●</text>
-
-              <!-- Bottom data -->
-              <text x="8" y="212" fill="#7a8094" font-family="monospace" font-size="8" opacity="0.6">EAR: 0.38 | MAR: 0.05 | BLINK: 14/min</text>
-              <text x="372" y="212" fill="#7a8094" font-family="monospace" font-size="8" opacity="0.6" text-anchor="end">CAM_01</text>
-            </svg>
-          </div>
-
-          <!-- Stats -->
-          <div class="stats-row">
-            <div class="stat-card">
-              <div class="stat-label">EYE RATIO</div>
-              <div class="stat-value stat-ok">0.38</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">BLINK/MIN</div>
-              <div class="stat-value stat-ok">14</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">STATUS</div>
-              <div class="stat-value stat-ok">OK</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- STATS STRIP -->
-<div class="stats-strip">
-  <div class="strip-stat">
-    <span class="strip-number">97%</span>
-    <div class="strip-label">Detection Accuracy</div>
-  </div>
-  <div class="strip-stat">
-    <span class="strip-number">&lt;1s</span>
-    <div class="strip-label">Alert Response Time</div>
-  </div>
-  <div class="strip-stat">
-    <span class="strip-number">30</span>
-    <div class="strip-label">Frames Per Second</div>
-  </div>
-  <div class="strip-stat">
-    <span class="strip-number">24/7</span>
-    <div class="strip-label">Continuous Monitoring</div>
-  </div>
-</div>
-
-<!-- HOW IT WORKS -->
-<section class="section" id="how-it-works">
-  <div class="section-tag">// HOW IT WORKS</div>
-  <h2 class="section-title">THREE STEPS TO SAFER DRIVING</h2>
-  <div class="steps-grid">
-    <div class="step-card">
-      <span class="step-num">01</span>
-      <span class="step-icon">📷</span>
-      <div class="step-title">Camera Capture</div>
-      <p class="step-desc">Your device camera continuously captures your face at 30 fps. No special hardware needed — works with any standard webcam or phone camera.</p>
-    </div>
-    <div class="step-card">
-      <span class="step-num">02</span>
-      <span class="step-icon">🧠</span>
-      <div class="step-title">AI Analysis</div>
-      <p class="step-desc">Our AI model tracks 68 facial landmarks in real time — analyzing eye aspect ratio (EAR), blink frequency, head tilt, and PERCLOS scores.</p>
-    </div>
-    <div class="step-card">
-      <span class="step-num">03</span>
-      <span class="step-icon">🔔</span>
-      <div class="step-title">Instant Alert</div>
-      <p class="step-desc">When drowsiness is detected, the system triggers an immediate audio-visual alert and notifies the fleet owner dashboard in real time.</p>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section class="features-section" id="features">
-  <div class="features-inner">
-    <div class="section-tag">// FEATURES</div>
-    <h2 class="section-title">BUILT FOR REAL ROADS</h2>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">👁️</div>
-        <div class="feature-title">Eye Aspect Ratio (EAR) Tracking</div>
-        <p class="feature-desc">Monitors the ratio between eye height and width to detect prolonged closures and unusual blink patterns with high precision.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📐</div>
-        <div class="feature-title">Head Pose Estimation</div>
-        <p class="feature-desc">Detects head nodding, tilting, and drooping — early signs of microsleep — using 3D facial landmark analysis.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <div class="feature-title">Real-Time Processing</div>
-        <p class="feature-desc">Processes video at 30 frames per second with sub-second latency, ensuring alerts fire before danger sets in.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📊</div>
-        <div class="feature-title">Owner Dashboard</div>
-        <p class="feature-desc">Fleet owners get a live dashboard with driver status, trip history, drowsiness events, and exportable reports.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔒</div>
-        <div class="feature-title">Secure & Private</div>
-        <p class="feature-desc">Video is processed locally on-device. No raw footage is stored or transmitted — only anonymized event metadata.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🌙</div>
-        <div class="feature-title">Night Mode</div>
-        <p class="feature-desc">IR-compatible algorithms and adaptive contrast ensure accurate detection even in low-light and nighttime conditions.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ALERT LEVELS -->
-<section class="alert-section">
-  <div class="alert-inner">
-    <div>
-      <div class="section-tag">// ALERT SYSTEM</div>
-      <h2 class="section-title" style="margin-bottom: 16px;">THREE-TIER<br>ALERT LEVELS</h2>
-      <p style="color: var(--muted); font-size: 15px; line-height: 1.7; font-weight: 300;">The system escalates through three levels based on real-time fatigue indicators — from a gentle nudge to a full emergency alert sent to the fleet owner.</p>
-    </div>
-    <div class="alert-levels">
-      <div class="alert-item alert-normal">
-        <div class="alert-dot-lg dot-g"></div>
-        <div>
-          <div class="alert-text-label" style="color: var(--green);">NORMAL — Driver Alert</div>
-          <div class="alert-text-desc">EAR within range, blink rate normal, head position stable.</div>
-        </div>
-      </div>
-      <div class="alert-item alert-caution">
-        <div class="alert-dot-lg dot-a"></div>
-        <div>
-          <div class="alert-text-label" style="color: var(--amber);">CAUTION — Early Fatigue Detected</div>
-          <div class="alert-text-desc">Slower blinks, slight head droop. Gentle audio chime triggered.</div>
-        </div>
-      </div>
-      <div class="alert-item alert-danger">
-        <div class="alert-dot-lg dot-r"></div>
-        <div>
-          <div class="alert-text-label" style="color: var(--red);">DANGER — Drowsiness Confirmed</div>
-          <div class="alert-text-desc">Eyes closing &gt;2s, head nodding. Alarm + owner notification fired.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-logo">DRIVER<span>WATCH</span></div>
-  <p class="footer-copy">© 2026 Real-Time Driver Drowsiness Detection System. All rights reserved.</p>
-</footer>
-
-</body>
+    </footer>
+  </body>
 </html>
 
 {% endblock %}

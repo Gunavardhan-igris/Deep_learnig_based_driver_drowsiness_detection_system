@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from DriverDrowsiness import views as mainView
 from users import views as usr
 from admins import views as admins
@@ -20,11 +22,8 @@ urlpatterns = [
     path("DriverRegisterActions/", usr.DriverRegisterActions, name="DriverRegisterActions"),
     path("AutoistLoginCheck/", usr.AutoistLoginCheck, name="AutoistLoginCheck"),
     path("AutoistHome/", usr.AutoistHome, name="AutoistHome"),
-    path(
-    "StartDetection/",
-    usr.StartDetection,
-    name="StartDetection"
-), 
+    path("StartDetection/", usr.StartDetection, name="StartDetection"),
+    path("AnalyzeCameraFrame/", usr.AnalyzeCameraFrame, name="AnalyzeCameraFrame"),
     path("DetectFatigueDriver/", usr.DetectFatigueDriver, name="DetectFatigueDriver"),
     path("StartTraining/", usr.StartTraining, name="StartTraining"),
     path("Autoisthistory/", usr.Autoisthistory, name="Autoisthistory"),
@@ -42,4 +41,4 @@ urlpatterns = [
     path("AdmindeActivaAutoists/", admins.AdmindeActivaAutoists, name="AdmindeActivaAutoists"),
     path("AdminDeleteAutoists/", admins.AdminDeleteAutoists, name="AdminDeleteAutoists"),
     path("AdminViewFatigueHistory/", admins.AdminViewFatigueHistory, name="AdminViewFatigueHistory"),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
